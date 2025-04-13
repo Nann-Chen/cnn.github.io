@@ -1,0 +1,167 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no" />
+    <title>ArcGIS Maps SDK for JavaScript Tutorials: Display a map</title>
+    <style>
+      html, body {
+        padding: 0;
+        margin: 0;
+        height: 100%;
+        width: 100%;
+        font-family: Arial, sans-serif;
+      }
+      
+      /* 三区域布局 */
+      .header {
+        height: 60px;
+        background-color: #0079c1;
+        color: white;
+        display: flex;
+        align-items: center;
+        padding: 0 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      }
+      
+      .map-container {
+        height: calc(100% - 160px); /* 减去页眉和底图库高度 */
+        width: 100%;
+      }
+      
+      .basemap-gallery {
+        height: 100px;
+        background-color: #f5f5f5;
+        display: flex;
+        overflow-x: auto;
+        padding: 10px;
+        border-top: 1px solid #ddd;
+      }
+      
+      .basemap-thumbnail {
+        width: 80px;
+        height: 80px;
+        margin-right: 10px;
+        cursor: pointer;
+        border: 2px solid transparent;
+      }
+      
+      .basemap-thumbnail:hover {
+        border-color: #0079c1;
+      }
+      
+      .basemap-thumbnail.active {
+        border-color: #0079c1;
+      }
+     
+  
+    </style>
+    
+    <!-- 加载Calcite组件 -->
+    <script type="module" src="https://js.arcgis.com/calcite-components/3.0.3/calcite.esm.js"></script>
+
+    <!-- 加载ArcGIS Maps SDK for JavaScript from CDN -->
+    <link rel="stylesheet" href="https://js.arcgis.com/4.32/esri/themes/light/main.css" />
+    <script src="https://js.arcgis.com/4.32/"></script>
+
+    <!-- 加载Map components from CDN-->
+    <script
+      type="module"
+      src="https://js.arcgis.com/map-components/4.32/arcgis-map-components.esm.js"
+    ></script>
+  </head>
+
+  <body>
+    <!-- 页眉区域 -->
+    <div class="header">
+      <h1>粤港澳大湾区生态图</h1>
+    </div>
+    
+    <!-- 地图区域 -->
+    <div class="map-container">
+      <arcgis-map id="mainMap" basemap="streets-navigation-vector">
+        <!-- 添加各种微件 -->
+        <arcgis-scale position="top-left"></arcgis-scale>
+        <arcgis-search position="top-right"></arcgis-search>
+        <arcgis-zoom position="bottom-left"></arcgis-zoom>
+        <arcgis-legend position="bottom-right"></arcgis-legend>
+        <arcgis-layer-list position="top-right"></arcgis-layer-list>
+        
+      </arcgis-map>
+    </div>
+    
+    <!-- 底图库区域 -->
+    <div class="basemap-gallery" id="basemapGallery">
+      <!-- 底图缩略图将通过JavaScript动态添加 -->
+    </div>
+    <script>
+      require([
+        "esri/layers/FeatureLayer",
+        "esri/Basemap",
+        "esri/layers/TileLayer",
+        "esri/widgets/BasemapGallery",
+        "esri/widgets/Expand",
+        "esri/widgets/ScaleBar"
+      ], (FeatureLayer, Basemap, TileLayer, BasemapGallery, Expand,ScaleBar) => {
+        
+        const arcgisMap = document.querySelector("arcgis-map");
+        
+        // 当地图视图准备好后
+        arcgisMap.addEventListener("arcgisViewReadyChange", () => {
+          const view = arcgisMap.view;
+          
+          view.goTo({
+            center: [113.5, 22.4],  // 粤港澳大湾区的中心坐标
+            zoom: 8                 // 适当的缩放级别
+          });
+
+          const scaleBar = new ScaleBar({
+      view: view,
+      unit: "metric"
+    });
+    
+    view.ui.add(scaleBar, {
+      position: "top-left"
+    });
+          // 添加专题图层
+          const trailheadsLayer = new FeatureLayer({
+            url: "https://www.geosceneonline.cn/server/rest/services/Hosted/粤港澳_WFL1/FeatureServer/1",
+            title: "粤港澳专题数据"
+          });
+          arcgisMap.map.add(trailheadsLayer);
+          
+          // 初始化底图库
+          const basemapGallery = new BasemapGallery({
+            view: view,
+            container: document.getElementById("basemapGallery")
+          });
+          
+          // 可选：添加自定义底图
+          const customBasemap = new Basemap({
+            baseLayers: [
+              new TileLayer({
+                url: "https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer",
+                title: "自定义影像图"
+              })
+            ],
+            title: "自定义影像",
+            id: "custom-imagery"
+          });
+          
+          // 将自定义底图添加到底图库
+          basemapGallery.basemaps.add(customBasemap);
+          
+          // 可选：添加Expand微件来包含图层列表
+          const layerListExpand = new Expand({
+            view: view,
+            content: document.querySelector("arcgis-layer-list"),
+            expandIcon: "layers",
+            expandTooltip: "图层列表"
+          });
+          
+          // 将Expand微件添加到UI
+          view.ui.add(layerListExpand, "top-right");
+        });
+      });
+    </script>
+  </body>
+</html>
